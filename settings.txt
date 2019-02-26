@@ -1,0 +1,3 @@
+period = 15 # seconds
+terminating condition = None # Function with CompletedProcess input
+output = None # Default to sys.stdout.
