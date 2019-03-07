@@ -1,4 +1,4 @@
-import subprocess, time, sys
+import subprocess, time, sys, os
 from subprocess import PIPE, STDOUT, DEVNULL
 
 # settings_f = open("settings.txt", "r")
@@ -32,9 +32,6 @@ def track(output_file, terminating_substring, *args, **kargs):
 	method, then it is assumed to be terminal_output; in the case that it
 	contains a .write() method, it is used as the output to print(file = ).
 	"""
-	# output_file, terminating_substring, post_process_output_file = None,
-	# period = 15, time_stamp = True, terminal_output = True,
-	# *subproc_args, **subproc_kargs)
 	keys = kargs.keys()
 	if "post_process_output_file" in keys:
 		pass # ... TODO incorporate all the ways that kargs could be involved here.
@@ -66,8 +63,42 @@ def track(output_file, terminating_substring, *args, **kargs):
 		period = 15
 	# Now post_process_output_file and period have been defined.
 	if isinstance(args[0], int):
-		pass # TODO...
-		
+		pass # TODO... define timestamp and terminal output.
+	time_stamp = time.asctime
+	terminal_output = sys.stdout
+	continue_tracking = True
+	if "stdout" not in keys:
+		kargs["stdout"] = PIPE
+	if "stderr" not in keys:
+		kargs["stderr"] = PIPE
+	f = open(output_file, "w")
+	while continue_tracking:
+		if time_stamp is not False:
+			print(time_stamp(), file = terminal_output, flush = True)
+			print(time_stamp(), file = f, flush = True)
+		cp = subprocess.run(*args, **kargs)
+		out = cp.stdout.decode("utf-8")
+		err = cp.stderr.decode("utf-8")
+		print(out, file = terminal_output, flush = True)
+		print(err, file = terminal_output, flush = True)
+		print(out, file = f, flush = True)
+		print(err, file = f, flush = True)
+		continue_tracking = out.find(terminating_substring) == -1
+		if continue_tracking: time.sleep(period)
+	f.flush()
+	f.close()
+	if post_process_output_file is not None:
+		subprocess.run(["mv", output_file, post_process_output_file])
 
 class NullStream(object):
 	def write(*args, **kargs): return None
+
+# My settings
+
+outfilename = "dropbox_status_%s.txt" %(time.strftime("%Y_%m_%d__%H_%M_%S"))
+output_file = os.path.expanduser("~/%s" % outfilename)
+post_output_file = os.path.expanduser("~/Dropbox/Dropbox_statuses/%s" % outfilename)
+terminating_substring = "Up to date"
+
+track(output_file, terminating_substring, post_output_file, ["dropbox", "status"])
+
