@@ -1,5 +1,5 @@
-import subprocess, time, sys, os
-from subprocess import PIPE, STDOUT, DEVNULL
+import subprocess, time, sys
+from subprocess import PIPE # , STDOUT, DEVNULL
 
 # settings_f = open("settings.txt", "r")
 # settings = settings_f.read()
@@ -11,7 +11,7 @@ def track(output_file, terminating_substring, *args, **kargs):
 	"""
 	track(output_file, terminating_substring, post_process_output_file =
 	 None, period = 15, time_stamp = True, terminal_output = True,
-	 *subproc_args, **subproc_kargs)
+	 heading = None, *subproc_args, **subproc_kargs)
 
 	Outputs the result of subproc_args and subproc_kargs being passed to
 	subprocess.run() periodically. Output file must be specified.
@@ -31,6 +31,9 @@ def track(output_file, terminating_substring, *args, **kargs):
 	If the parameter after time_stamp is a bool or contains a .write()
 	method, then it is assumed to be terminal_output; in the case that it
 	contains a .write() method, it is used as the output to print(file = ).
+
+	The heading parameter is prepended to the file output. It must be
+	passed by keyword.
 	"""
 	keys = kargs.keys()
 	if "post_process_output_file" in keys:
@@ -52,6 +55,7 @@ def track(output_file, terminating_substring, *args, **kargs):
 			terminal_output = sys.stdout
 		else:
 			f.close()
+			subprocess.run(["rm", post_process_output_file])
 			args = args[1:]
 		if isinstance(args[0], int):
 			period = args[0]
@@ -71,7 +75,14 @@ def track(output_file, terminating_substring, *args, **kargs):
 		kargs["stdout"] = PIPE
 	if "stderr" not in keys:
 		kargs["stderr"] = PIPE
+	heading = None
+	if "heading" in keys:
+		heading = kargs["heading"]
+		del kargs["heading"]
 	f = open(output_file, "w")
+	if heading is not None:
+		print(heading, file = terminal_output, flush = True)
+		print(heading, file = f, flush = True)
 	while continue_tracking:
 		if time_stamp is not False:
 			print(time_stamp(), file = terminal_output, flush = True)
@@ -93,12 +104,6 @@ def track(output_file, terminating_substring, *args, **kargs):
 class NullStream(object):
 	def write(*args, **kargs): return None
 
-# My settings
-
-outfilename = "dropbox_status_%s.txt" %(time.strftime("%Y_%m_%d__%H_%M_%S"))
-output_file = os.path.expanduser("~/%s" % outfilename)
-post_output_file = os.path.expanduser("~/Dropbox/Dropbox_statuses/%s" % outfilename)
-terminating_substring = "Up to date"
-
-track(output_file, terminating_substring, post_output_file, ["dropbox", "status"])
+if __name__ == "__main__":
+	pass # TODO come up with a snazzy default...
 
