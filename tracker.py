@@ -42,6 +42,9 @@ def track(output_file, terminating_substring, *args, **kargs):
 		post_process_output_file = None
 		period = args[0]
 		args = args[1:]
+	elif "period" in keys:
+		period = kargs["period"]
+		del kargs["period"]
 	elif isinstance(args[0], str):
 		try:
 			post_process_output_file = args[0]
