@@ -60,11 +60,12 @@ def track(output_file, terminating_substring, *args, **kargs):
 			f.close()
 			subprocess.run(["rm", post_process_output_file])
 			args = args[1:]
-		if isinstance(args[0], int): # TODO check whether period was defined earlier
-			period = args[0]
-			args = args[1:]
-		else:
-			period = 15
+		if "period" not in dir():
+			if isinstance(args[0], int):
+				period = args[0]
+				args = args[1:]
+			else:
+				period = 15
 	else:
 		post_process_output_file = None
 		period = 15
