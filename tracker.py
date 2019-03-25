@@ -45,7 +45,7 @@ def track(output_file, terminating_substring, *args, **kargs):
 	elif "period" in keys:
 		period = kargs["period"]
 		del kargs["period"]
-	elif isinstance(args[0], str):
+	if isinstance(args[0], str):
 		try:
 			post_process_output_file = args[0]
 			f = open(post_process_output_file, "a")
@@ -60,7 +60,7 @@ def track(output_file, terminating_substring, *args, **kargs):
 			f.close()
 			subprocess.run(["rm", post_process_output_file])
 			args = args[1:]
-		if isinstance(args[0], int):
+		if isinstance(args[0], int): # TODO check whether period was defined earlier
 			period = args[0]
 			args = args[1:]
 		else:
